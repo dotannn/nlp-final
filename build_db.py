@@ -23,7 +23,7 @@ def get_movie_data(movie_id):
 
     return {
         "movie_id": movie_id,
-        "title": movie.get("title")
+        "title": movie.get("title"),
         "genres": genres,
         "plot": plot,
         "year": movie.get("year"),
@@ -36,6 +36,7 @@ def norm_plot(plots):
 
 def extract_movie_id(tconst):
     return tconst[2:]
+
 
 def get_movie_ids(movie_db_path, filters=None):
     movie_ids = []
