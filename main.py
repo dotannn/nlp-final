@@ -76,7 +76,7 @@ em_sz,nh,nl = 400,1150,3
 
 wd=1e-7
 bptt=70
-bs=4
+bs=24
 opt_fn = partial(optim.Adam, betas=(0.8, 0.99))
 
 trn_dl = LanguageModelLoader(np.concatenate(trn_lm), bs, bptt)
@@ -91,7 +91,7 @@ learner= md.get_model(opt_fn, em_sz, nh, nl,
 
 
 from metrics import total_jaccard
-learner.metrics = [total_jaccard]
+learner.metrics = [accuracy] #,total_jaccard]
 # learner.freeze_to(-1)
 learner.unfreeze()
 
@@ -99,7 +99,7 @@ lr=1e-3
 lrs = lr
 
 
-# learner.fit(lrs/2, 1, wds=wd, use_clr=(32,2), cycle_len=1)
+learner.fit(lrs/2, 1, wds=wd, use_clr=(32,2), cycle_len=1)
 
 
 # learner.lr_find(start_lr=lrs/10, end_lr=lrs*10, linear=True)
@@ -107,7 +107,7 @@ lrs = lr
 # learner.sched.plot()
 
 
-# learner.fit(lrs, 1, wds=wd, use_clr=(20,10), cycle_len=15)
+learner.fit(lrs, 1, wds=wd, use_clr=(20,10), cycle_len=15)
 
 learner.save_encoder('lm1_enc')
 
@@ -153,7 +153,7 @@ opt_fn = partial(optim.Adam, betas=(0.7, 0.99))
 learn = RNN_Learner(md, TextModel(to_gpu(m)), opt_fn=opt_fn)
 learn.reg_fn = partial(seq2seq_reg, alpha=2, beta=1)
 learn.clip=25.
-learn.metrics = [total_jaccard]
+learn.metrics = [accuracy] #total_jaccard]
 
 lr=3e-3
 lrm = 2.6
