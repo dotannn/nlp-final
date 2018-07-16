@@ -34,7 +34,7 @@ from spacy.symbols import ORTH
 #
 #
 # trn_data = pd.read_csv(TRAIN_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=chunksize)
-# val_data = pd.read_csv(TRAIN_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=chunksize)
+# val_data = pd.read_csv(VAL_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=chunksize)
 #
 #
 # tok_trn, trn_labels = get_all(trn_data, 1)
