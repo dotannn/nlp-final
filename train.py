@@ -1,6 +1,6 @@
 from nltk.corpus import stopwords
 import pandas as pd
-from utils import get_texts, get_all
+from utils import get_texts, get_all_tokenized
 print(stopwords.words('english'))
 
 

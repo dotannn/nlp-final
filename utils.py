@@ -1,12 +1,11 @@
 import ast
 import re
 import html
-from fastai.text import  Tokenizer, partition_by_cores
-import numpy as np
+from fastai.text import Tokenizer, partition_by_cores
 
+from vocabulary import Vocabulary
 
 BOS = 'xbos' # begining of string
-FLD = 'xfld' # data field tag
 
 re1 = re.compile(r'  +')
 
@@ -18,23 +17,33 @@ def fixup(x):
     return re1.sub(' ', html.unescape(x))
 
 
-def get_texts(df, n_lbls=1):
-    labels = df.iloc[:,range(n_lbls)].values #.astype(np.int64)
+def get_texts_and_tokenize(df, n_lbls=1):
+    labels = df.iloc[:,range(n_lbls)].values
     labels = labels.tolist()
     labels = list(map(lambda x: ast.literal_eval(x[0]), labels))
-    texts = f'\n{BOS} {FLD} 1 ' + df[n_lbls].astype(str)
-    # for i in range(n_lbls+1, len(df.columns)): texts += f' {FLD} {i-n_lbls} ' + df[i].astype(str)
+    texts = f'\n{BOS} ' + df[n_lbls].astype(str)
+
+    # perform common fixup to text:
     texts = list(texts.apply(fixup).values)
 
+    # tokenize texts
     tok = Tokenizer().proc_all_mp(partition_by_cores(texts))
     return tok, list(labels)
 
 
-def get_all(df, n_lbls):
+def get_all_tokenized(df, n_lbls):
     tok, labels = [], []
     for i, r in enumerate(df):
         print(i)
-        tok_, labels_ = get_texts(r, n_lbls)
+        tok_, labels_ = get_texts_and_tokenize(r, n_lbls)
         tok += tok_;
         labels += labels_
     return tok, labels
+
+
+def numericalize_texts(token_train, token_val):
+    vocab = Vocabulary.from_text(token_train)
+    train_ids = vocab.numericalize(token_train)
+    val_ids = vocab.numericalize(token_val)
+
+    return train_ids, val_ids, vocab
