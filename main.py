@@ -19,7 +19,7 @@ VAL_LABELS = Path("tmp/val_labels.npy")
 IDX_TO_TOKEN = Path("tmp/idx_to_token.pkl")
 
 USE_CACHE = True
-MAX_SAMPLES = 3000
+MAX_SAMPLES = -1
 
 # Load texts and labels:
 if TRAIN_IDS.exists() and VAL_IDS.exists() and IDX_TO_TOKEN.exists() and USE_CACHE:
@@ -58,7 +58,7 @@ n_genres = len(GENRES)
 
 genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab)
 
-genre_classifier.fit(train_ids, train_labels, batch_size=16, val_ids=val_ids, val_labels=val_labels)
+genre_classifier.fit(train_ids, train_labels, batch_size=8, val_ids=val_ids, val_labels=val_labels)
 
 # TODO , for multi-label replace crit to binary_cross_entropy_with_logits
 
