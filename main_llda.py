@@ -76,4 +76,4 @@ for v, voca in enumerate(llda.vocas):
     print(','.join([voca]+[str(x) for x in llda.n_z_t[:,v]]))
     # import ipdb; ipdb.set_trace() # NO_COMMIT
     print(','.join([voca]+[str(x) for x in phi[:,v]]))
-import ipdb; ipdb.set_trace() # NO_COMMIT)
+# import ipdb; ipdb.set_trace() # NO_COMMIT)
