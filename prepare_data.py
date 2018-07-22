@@ -30,7 +30,7 @@ def load_genres():
     return df_genres, GENRES
 
 
-def load_plots( df_genres, genres_dict):
+def load_plots( df_genres, genres_dict, index_genres=True):
     movies = []
     plots = []
     genres = []
@@ -46,8 +46,10 @@ def load_plots( df_genres, genres_dict):
                     if genre is not None and len( genre ) > 0:
                         movies.append( movie_name )
                         plots.append( plot.replace( "\n", " " ) )
-                        genres.append( list( map( lambda x: genres_dict.get( x ), genre ) ) )
-
+                        if index_genres:
+                            genres.append( list( map( lambda x: genres_dict.get( x ), genre ) ) )
+                        else:
+                            genres.append(genre)
                 plot = ""
                 movie_name = line[4:].strip()
             if line.startswith( "PL: " ):
@@ -55,13 +57,13 @@ def load_plots( df_genres, genres_dict):
     return movies, plots, genres
 
 
-def generate_input_csv(train_csv_out, val_csv_out, split_ratio=0.9):
+def generate_input_csv(train_csv_out, val_csv_out, split_ratio=0.9, index_genres=True):
     df_genres, genres_list = load_genres()
     genres_dict = {}
     for idx, label in enumerate(genres_list):
         genres_dict[label] = idx
 
-    movies, plots, genres = load_plots(df_genres, genres_dict)
+    movies, plots, genres = load_plots(df_genres, genres_dict, index_genres=index_genres)
 
     # shuffle the data
     idx = np.random.permutation( len( movies ) )
