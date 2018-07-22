@@ -12,7 +12,7 @@ class RNNGenreClassifier(GenreClassifier):
     OPT_FN = partial( optim.Adam,
                       betas=(0.75, 0.99) )  # defaults for Adam dont work well for NLP so we change to this number...
 
-    def __init__(self, embedding_size=200, n_hidden_activations=500, n_layers=3, drop_mul_lm=0.7, drop_mul_classifier=0.5,
+    def __init__(self, embedding_size=280, n_hidden_activations=720, n_layers=3, drop_mul_lm=0.8, drop_mul_classifier=0.6,
                  bptt=70, wd=1e-7, n_classes=31, vocab=None):#0.7):
         self._n_classes = n_classes
         self._vocab = vocab
@@ -43,13 +43,13 @@ class RNNGenreClassifier(GenreClassifier):
         lr = 1e-3
         # language_model.lr_find(start_lr=lr/10, end_lr=lr*50, linear=True)
         # lr = language_model.sched.lrs[np.argmin(language_model.sched.losses)]
-        # language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1)
+        language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1)
 
         # language_model.lr_find( start_lr=lr / 10, end_lr=lr * 10, linear=True )
 
         # lr = language_model.sched.lrs[np.argmin( language_model.sched.losses )]
 
-        # language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=15 )
+        language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=15 )
 
         language_model.save_encoder("enc_weights")
 
@@ -108,7 +108,7 @@ class RNNGenreClassifier(GenreClassifier):
         # lrs = np.array( [1e-4, 1e-4, 1e-4, 1e-3, 1e-2] )
 
         wd = 1e-6
-        classifier_model.load_encoder( 'enc_weights' )
+        classifier_model.load_encoder( 'enc_weights_21_7' )
 
         classifier_model.freeze_to( -1 )
         # TODO: should we use wds?
@@ -116,7 +116,7 @@ class RNNGenreClassifier(GenreClassifier):
         classifier_model.freeze_to( -2 )
         classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3) )
         classifier_model.unfreeze()
-        classifier_model.fit( lrs, 1, cycle_len=14, use_clr=(32, 10) )
+        classifier_model.fit( lrs, 1, cycle_len=24, use_clr=(32, 10) )
 
         classifier_model.save( 'classifier_weights' )
 
