@@ -1,7 +1,9 @@
 from fastai.text import LanguageModelLoader, LanguageModelData, accuracy, TextDataset, SortSampler, SortishSampler, \
     ModelData, TextModel, RNN_Learner, to_gpu, DataLoader, get_rnn_classifier
 from fastai.lm_rnn import *
+from torch.nn.functional import binary_cross_entropy
 
+from metrics import total_jaccard
 from utils import *
 from classifier import GenreClassifier
 
@@ -41,20 +43,26 @@ class RNNGenreClassifier(GenreClassifier):
         lr = 1e-3
         # language_model.lr_find(start_lr=lr/10, end_lr=lr*50, linear=True)
         # lr = language_model.sched.lrs[np.argmin(language_model.sched.losses)]
-        language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1)
+        # language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1)
 
         # language_model.lr_find( start_lr=lr / 10, end_lr=lr * 10, linear=True )
 
         # lr = language_model.sched.lrs[np.argmin( language_model.sched.losses )]
 
-        language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=15 )
+        # language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=15 )
 
         language_model.save_encoder("enc_weights")
 
     def _train_classifier(self, train_ids, train_labels, batch_size=4, val_ids=None, val_labels=None):
         # change from multi-label to multi-class:
-        reduced_train_labels = np.array( [l[0] for l in train_labels] )
-        reduced_val_labels = np.array( [l[0] for l in val_labels] )
+
+        def one_hot_idxs(idxs, n_classes):
+            res = np.zeros( n_classes )
+            res[idxs] = 1.
+            return res
+
+        reduced_train_labels = np.array( [one_hot_idxs(l, self._n_classes) for l in train_labels])
+        reduced_val_labels = np.array( [one_hot_idxs(l, self._n_classes) for l in val_labels] )
 
         train_ds = TextDataset( train_ids, reduced_train_labels)
         val_ds = TextDataset( val_ids, reduced_val_labels )
@@ -77,7 +85,22 @@ class RNNGenreClassifier(GenreClassifier):
         classifier_model = RNN_Learner( md, TextModel( to_gpu( m ) ), opt_fn=self.OPT_FN )
         classifier_model.reg_fn = partial( seq2seq_reg, alpha=2, beta=1 )
         classifier_model.clip = 25.  # or 0.3 ?!
-        classifier_model.metrics = [accuracy]  # total_jaccard]
+
+        def binary_ce_wrapper(predicted, gt):
+            out = F.sigmoid(predicted)
+            return binary_cross_entropy(out, gt)
+
+        classifier_model.crit = binary_ce_wrapper
+        jaccard_0_5 = partial( total_jaccard, thresh=0.5 )
+        jaccard_0_5.__name__ = "jaccard_0_5"
+
+        jaccard_0_75 = partial( total_jaccard, thresh=0.75 )
+        jaccard_0_75.__name__ = "jaccard_0_75"
+
+        jaccard_0_25 = partial( total_jaccard, thresh=0.25 )
+        jaccard_0_25.__name__ = "jaccard_0_25"
+
+        classifier_model.metrics = [jaccard_0_5, jaccard_0_25, jaccard_0_75]
 
         lr = 3e-3
         lrm = 2.6
