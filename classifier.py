@@ -2,9 +2,8 @@ from abc import abstractmethod
 
 
 class GenreClassifier(object):
-    def __init__(self, classes):
-        self._classes = classes
-
+    def __init__(self, n_classes):
+        self._n_classes = n_classes
 
     @abstractmethod
     def train(self, corpus):

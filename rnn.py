@@ -14,7 +14,8 @@ class RNNGenreClassifier(GenreClassifier):
 
     def __init__(self, embedding_size=280, n_hidden_activations=720, n_layers=3, drop_mul_lm=0.8, drop_mul_classifier=0.6,
                  bptt=70, wd=1e-7, n_classes=31, vocab=None):#0.7):
-        self._n_classes = n_classes
+        super( RNNGenreClassifier, self ).__init__(n_classes)
+
         self._vocab = vocab
         self._dropouts_lm = np.array( [0.25, 0.1, 0.2, 0.02, 0.15] ) * drop_mul_lm
         self._dropouts_classifier = np.array( [0.4, 0.5, 0.05, 0.3, 0.4] ) * drop_mul_classifier
@@ -24,7 +25,7 @@ class RNNGenreClassifier(GenreClassifier):
         self._n_layers = n_layers
         self._bptt = bptt
         self._wd = wd
-        pass
+
 
     def _train_lm(self, train_ids, batch_size=4, val_ids=None):
         train_dataloader = LanguageModelLoader( np.concatenate( train_ids ), batch_size, self._bptt )
@@ -131,5 +132,6 @@ class RNNGenreClassifier(GenreClassifier):
     def predict_lm(self):
         pass
 
-    def predict(self):
+    def predict(self, text):
+
         pass

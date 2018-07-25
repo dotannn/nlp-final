@@ -18,8 +18,8 @@ TRAIN_LABELS = Path("tmp/train_labels.npy")
 VAL_LABELS = Path("tmp/val_labels.npy")
 IDX_TO_TOKEN = Path("tmp/idx_to_token.pkl")
 
-USE_CACHE = True
-MAX_SAMPLES = 2000
+USE_CACHE = False
+MAX_SAMPLES = -1
 
 # Load texts and labels:
 if TRAIN_IDS.exists() and VAL_IDS.exists() and IDX_TO_TOKEN.exists() and USE_CACHE:
@@ -30,7 +30,7 @@ if TRAIN_IDS.exists() and VAL_IDS.exists() and IDX_TO_TOKEN.exists() and USE_CAC
     idx_to_token = pickle.load(Path(IDX_TO_TOKEN).open('rb'))
     vocab = Vocabulary(idx_to_token)
 else:
-    if not TRAIN_MOVIE_GENRES_PLOT_CSV.exists() and USE_CACHE:
+    if not TRAIN_MOVIE_GENRES_PLOT_CSV.exists() or not USE_CACHE:
         generate_input_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, VAL_MOVIE_GENRES_PLOT_CSV )
 
     CHUNKSIZE = 24000
@@ -60,5 +60,4 @@ genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab)
 
 genre_classifier.fit(train_ids, train_labels, batch_size=8, val_ids=val_ids, val_labels=val_labels)
 
-# TODO , for multi-label replace crit to binary_cross_entropy_with_logits
 
