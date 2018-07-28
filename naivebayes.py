@@ -1,4 +1,4 @@
-from classifier import GenreClassifier
+from genre_classifier import GenreClassifier
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
@@ -9,15 +9,15 @@ class NaiveBayesGenreClassifier(GenreClassifier):
     def __init__(self,):
         self.text_clf = None
 
-    def train(self, summaries, labels):
+    def train(self, train_data, train_labels, val_data=None, val_labels=None):
 
-        norm_labels = [random.choice(label) if type(label) == list else label for label in labels]
+        norm_labels = [random.choice(label) if type(label) == list else label for label in train_labels]
 
         text_clf = Pipeline([('vect', CountVectorizer()),
                              ('tfidf', TfidfTransformer()),
                              ('clf', MultinomialNB()),
                              ])
-        self.text_clf = text_clf.fit(summaries, norm_labels)
+        self.text_clf = text_clf.fit( train_data, norm_labels )
 
     def predict(self, summaries):
         predicted = self.text_clf.predict(summaries)

@@ -7,7 +7,7 @@ class GenreClassifier(object):
         self._n_classes = n_classes
 
     @abstractmethod
-    def train(self, summaries, labels):
+    def train(self, train_data, train_labels, val_data=None, val_labels=None):
         return
 
     @abstractmethod

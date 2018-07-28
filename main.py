@@ -7,13 +7,14 @@ import pickle
 import pandas as pd
 
 from rnn import RNNGenreClassifier
+from naivebayes import NaiveBayesGenreClassifier
 
 TRAIN_MOVIE_GENRES_PLOT_CSV = Path("data/trn_movie_genres_plot.csv")
 VAL_MOVIE_GENRES_PLOT_CSV = Path("data/val_movie_genres_plot.csv")
 GENRES_TYPES_FILE = "data/genres.txt"
 
-TRAIN_IDS = Path("tmp/train_ids.npy")
-VAL_IDS = Path("tmp/val_ids.npy")
+TRAIN_TOKENS = Path("tmp/train_tokens.npy")
+VAL_TOKENS = Path("tmp/val_tokens.npy")
 TRAIN_LABELS = Path("tmp/train_labels.npy")
 VAL_LABELS = Path("tmp/val_labels.npy")
 IDX_TO_TOKEN = Path("tmp/idx_to_token.pkl")
@@ -22,42 +23,51 @@ USE_CACHE = False
 MAX_SAMPLES = -1
 
 # Load texts and labels:
-if TRAIN_IDS.exists() and VAL_IDS.exists() and IDX_TO_TOKEN.exists() and USE_CACHE:
-    train_ids = np.load(TRAIN_IDS)
-    val_ids = np.load(VAL_IDS)
-    train_labels = np.load(TRAIN_LABELS)
-    val_labels = np.load(VAL_LABELS)
-    idx_to_token = pickle.load(Path(IDX_TO_TOKEN).open('rb'))
-    vocab = Vocabulary(idx_to_token)
+if not TRAIN_MOVIE_GENRES_PLOT_CSV.exists() or not USE_CACHE:
+    generate_input_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, VAL_MOVIE_GENRES_PLOT_CSV )
+
+CHUNKSIZE = 24000
+if MAX_SAMPLES > 0:
+    train_data = pd.read_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE, nrows=MAX_SAMPLES )
+    val_data = pd.read_csv( VAL_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE, nrows=MAX_SAMPLES // 10 )
 else:
-    if not TRAIN_MOVIE_GENRES_PLOT_CSV.exists() or not USE_CACHE:
-        generate_input_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, VAL_MOVIE_GENRES_PLOT_CSV )
+    train_data = pd.read_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE )
+    val_data = pd.read_csv( VAL_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE )
 
-    CHUNKSIZE = 24000
-    if MAX_SAMPLES > 0:
-        train_data = pd.read_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE, nrows=MAX_SAMPLES )
-        val_data = pd.read_csv( VAL_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE, nrows=MAX_SAMPLES // 10 )
-    else:
-        train_data = pd.read_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE )
-        val_data = pd.read_csv( VAL_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE )
 
+if TRAIN_TOKENS.exists() and VAL_TOKENS.exists() and IDX_TO_TOKEN.exists() and USE_CACHE:
+    token_train = np.load( TRAIN_TOKENS )
+    token_val = np.load( VAL_TOKENS )
+    train_labels = np.load( TRAIN_LABELS )
+    val_labels = np.load( VAL_LABELS )
+    idx_to_token = pickle.load( Path( IDX_TO_TOKEN ).open( 'rb' ) )
+    vocab = Vocabulary( idx_to_token )
+
+else:
     token_train, train_labels = get_all_tokenized( train_data, 1 )
     token_val, val_labels = get_all_tokenized( val_data, 1)
+    vocab = Vocabulary.from_text( token_train )
 
-    train_ids, val_ids, vocab = numericalize_texts(token_train, token_val)
-
-    np.save(str(TRAIN_IDS), train_ids)
-    np.save(str(VAL_IDS), val_ids)
-    np.save(str(TRAIN_LABELS), train_labels)
-    np.save(str(VAL_LABELS), val_labels)
-    pickle.dump(vocab._idx_to_token, open(IDX_TO_TOKEN, 'wb'))
+np.save(str(TRAIN_TOKENS), token_train)
+np.save(str(VAL_TOKENS), token_val)
+np.save(str(TRAIN_LABELS), train_labels)
+np.save(str(VAL_LABELS), val_labels)
+pickle.dump(vocab._idx_to_token, open(IDX_TO_TOKEN, 'wb'))
 
 GENRES = Path( GENRES_TYPES_FILE ).open( "r" ).readlines()
 GENRES = list( map( lambda x: x.strip(), GENRES ) )
 n_genres = len(GENRES)
 
-genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab)
+baseline = NaiveBayesGenreClassifier()
 
-genre_classifier.fit(train_ids, train_labels, batch_size=8, val_ids=val_ids, val_labels=val_labels)
+genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab, batch_size=128)
 
+baseline.train(token_train, train_labels)
 
+genre_classifier.train(token_train. train_labels, token_val, val_labels)
+
+val_predict_baseline = baseline.predict(token_val)
+val_predict = genre_classifier.predict(token_val)
+
+baseline.eval(val_predict_baseline, val_labels)
+genre_classifier.eval(val_predict, val_labels)

@@ -85,7 +85,6 @@ def disp_data_stats(genres, genres_dict):
         print("\t%s: %d(%.2f%%)" % (idx2genre[gidx], val, (val * 100.0) / float(n_movies)))
 
 
-    pass
 def generate_input_csv(train_csv_out, val_csv_out, split_ratio=0.9, index_genres=True):
     df_genres, genres_list = load_genres()
     genres_dict = {}

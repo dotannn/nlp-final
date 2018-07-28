@@ -1,11 +1,11 @@
 from fastai.text import LanguageModelLoader, LanguageModelData, accuracy, TextDataset, SortSampler, SortishSampler, \
     ModelData, TextModel, RNN_Learner, to_gpu, DataLoader, get_rnn_classifier
 from fastai.lm_rnn import *
-from torch.nn.functional import binary_cross_entropy
+from torch.nn.functional import binary_cross_entropy, sigmoid
 
-from metrics import total_jaccard
+from metrics import jaccard_index, precision, recall, f1
 from utils import *
-from classifier import GenreClassifier
+from genre_classifier import GenreClassifier
 
 
 class RNNGenreClassifier(GenreClassifier):
@@ -13,7 +13,7 @@ class RNNGenreClassifier(GenreClassifier):
                       betas=(0.75, 0.99) )  # defaults for Adam dont work well for NLP so we change to this number...
 
     def __init__(self, embedding_size=280, n_hidden_activations=720, n_layers=3, drop_mul_lm=0.8, drop_mul_classifier=0.6,
-                 bptt=70, wd=1e-7, n_classes=31, vocab=None):#0.7):
+                 bptt=70, wd=1e-7, n_classes=31, vocab=None, batch_size=128):#0.7):
         super( RNNGenreClassifier, self ).__init__(n_classes)
 
         self._vocab = vocab
@@ -25,7 +25,19 @@ class RNNGenreClassifier(GenreClassifier):
         self._n_layers = n_layers
         self._bptt = bptt
         self._wd = wd
+        self._batch_size = batch_size
 
+    @staticmethod
+    def func_metric(preds, gts, thresh=0.5, func=jaccard_index):
+        if len( preds ) != len( gts ):
+            raise RuntimeError(
+                "predicted and gt lists must have same size! predicted = %d, gt = %d" % (len( preds ), len( gts )) )
+        def _process(p, g):
+            g = np.where( g > thresh )[0].tolist()
+            p = np.where( sigmoid( p ) > thresh )[0].tolist()
+            return func(p, g)
+
+        return np.array( [_process(p, g) for p, g in zip( preds, gts )] ).mean()
 
     def _train_lm(self, train_ids, batch_size=4, val_ids=None):
         train_dataloader = LanguageModelLoader( np.concatenate( train_ids ), batch_size, self._bptt )
@@ -34,25 +46,22 @@ class RNNGenreClassifier(GenreClassifier):
         md = LanguageModelData( "tmp", 1, self._vocab.size, train_dataloader, val_dataloader, bs=batch_size, bptt=self._bptt )
 
 
-        language_model = md.get_model( self.OPT_FN, self._embedding_size, self._n_hidden_activations, self._n_layers,
+        self._language_model = md.get_model( self.OPT_FN, self._embedding_size, self._n_hidden_activations, self._n_layers,
                                        dropouti=self._dropouts_lm[0], dropout=self._dropouts_lm[1], wdrop=self._dropouts_lm[2],
                                        dropoute=self._dropouts_lm[3], dropouth=self._dropouts_lm[4] )
 
-        language_model.metrics = [accuracy]
-        language_model.unfreeze()
+        self._language_model.metrics = [accuracy]
+        self._language_model.unfreeze()
 
         lr = 1e-3
-        # language_model.lr_find(start_lr=lr/10, end_lr=lr*50, linear=True)
-        # lr = language_model.sched.lrs[np.argmin(language_model.sched.losses)]
-        language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1)
+        self._language_model.lr_find(start_lr=lr/10, end_lr=lr*50, linear=True)
+        self._language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1)
 
-        # language_model.lr_find( start_lr=lr / 10, end_lr=lr * 10, linear=True )
+        self._language_model.lr_find( start_lr=lr / 10, end_lr=lr * 10, linear=True )
 
-        # lr = language_model.sched.lrs[np.argmin( language_model.sched.losses )]
+        self._language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=15 )
 
-        language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=15 )
-
-        language_model.save_encoder("enc_weights")
+        self._language_model.save_encoder("enc_weights")
 
     def _train_classifier(self, train_ids, train_labels, batch_size=4, val_ids=None, val_labels=None):
         # change from multi-label to multi-class:
@@ -83,55 +92,53 @@ class RNNGenreClassifier(GenreClassifier):
                                 dropouti=self._dropouts_classifier[0], wdrop=self._dropouts_classifier[1],
                                 dropoute=self._dropouts_classifier[2], dropouth=self._dropouts_classifier[3] )
 
-        classifier_model = RNN_Learner( md, TextModel( to_gpu( m ) ), opt_fn=self.OPT_FN )
-        classifier_model.reg_fn = partial( seq2seq_reg, alpha=2, beta=1 )
-        classifier_model.clip = 25.  # or 0.3 ?!
+        self._classifier_model = RNN_Learner( md, TextModel( to_gpu( m ) ), opt_fn=self.OPT_FN )
+        self._classifier_model.reg_fn = partial( seq2seq_reg, alpha=2, beta=1 )
+        self._classifier_model.clip = 25.  # or 0.3 ?!
 
         def binary_ce_wrapper(predicted, gt):
             out = F.sigmoid(predicted)
             return binary_cross_entropy(out, gt)
 
-        classifier_model.crit = binary_ce_wrapper
-        jaccard_0_5 = partial( total_jaccard, thresh=0.5 )
+        self._classifier_model.crit = binary_ce_wrapper
+        jaccard_0_5 = partial( self.func_metric, func=jaccard_index)
         jaccard_0_5.__name__ = "jaccard_0_5"
+        precision_0_5 = partial( self.func_metric, func=precision )
+        precision_0_5.__name__ = "precision_0_5"
+        recall_0_5 = partial( self.func_metric, func=recall)
+        recall_0_5.__name__ = "recall_0_5"
+        f1_0_5 = partial( self.func_metric, func=f1 )
+        f1_0_5.__name__ = "f1_0_5"
 
-        jaccard_0_75 = partial( total_jaccard, thresh=0.75 )
-        jaccard_0_75.__name__ = "jaccard_0_75"
-
-        jaccard_0_25 = partial( total_jaccard, thresh=0.25 )
-        jaccard_0_25.__name__ = "jaccard_0_25"
-
-        classifier_model.metrics = [jaccard_0_5, jaccard_0_25, jaccard_0_75]
+        self._classifier_model.metrics = [jaccard_0_5, precision_0_5, recall_0_5, f1_0_5]
 
         lr = 3e-3
         lrm = 2.6
         lrs = np.array( [lr / (lrm ** 4), lr / (lrm ** 3), lr / (lrm ** 2), lr / lrm, lr] )
-        # lrs = np.array( [1e-4, 1e-4, 1e-4, 1e-3, 1e-2] )
 
-        wd = 1e-6
-        classifier_model.load_encoder( 'enc_weights_21_7' )
+        self._classifier_model.load_encoder( 'enc_weights' )
 
-        classifier_model.freeze_to( -1 )
-        # TODO: should we use wds?
-        classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3) )
-        classifier_model.freeze_to( -2 )
-        classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3) )
-        classifier_model.unfreeze()
-        classifier_model.fit( lrs, 1, cycle_len=24, use_clr=(32, 10) )
+        self._classifier_model.freeze_to( -1 )
+        self._classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3) )
+        self._classifier_model.freeze_to( -2 )
+        self._classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3) )
+        self._classifier_model.unfreeze()
+        self._classifier_model.fit( lrs, 1, cycle_len=24, use_clr=(32, 10) )
 
-        classifier_model.save( 'classifier_weights' )
+        self._classifier_model.save( 'classifier_weights' )
 
-        pass
+    def train(self, train_data, train_labels, val_data=None, val_labels=None):
+        train_ids = self._vocab.numericalize( train_data )
+        val_ids = self._vocab.numericalize(val_data)
+        self._train_lm(train_ids, batch_size=self._batch_size, val_ids=val_ids)
 
-    def fit(self, train_ids, train_labels, batch_size=4, val_ids=None, val_labels=None):
-        self._train_lm(train_ids, batch_size=batch_size, val_ids=val_ids)
-
-        self._train_classifier(train_ids, train_labels, batch_size=batch_size, val_ids=val_ids,
+        self._train_classifier(train_ids, train_labels, batch_size=self._batch_size, val_ids=val_ids,
                                val_labels=val_labels)
 
-    def predict_lm(self):
-        pass
+    def predict_lm(self, tokens):
+        ids = self._vocab.numericalize(tokens)
+        self._language_model.predict_array(ids)
 
-    def predict(self, text):
-
-        pass
+    def predict(self, summaries_tokens):
+        summaries_ids = self._vocab.numericalize(summaries_tokens)
+        return self._classifier_model.predict_array(summaries_ids)

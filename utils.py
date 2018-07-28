@@ -43,10 +43,3 @@ def get_all_tokenized(df, n_lbls, do_tokenize=True):
         labels += labels_
     return tok, labels
 
-
-def numericalize_texts(token_train, token_val):
-    vocab = Vocabulary.from_text(token_train)
-    train_ids = vocab.numericalize(token_train)
-    val_ids = vocab.numericalize(token_val)
-
-    return train_ids, val_ids, vocab
