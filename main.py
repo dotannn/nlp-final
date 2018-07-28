@@ -69,5 +69,5 @@ genre_classifier.train(token_train. train_labels, token_val, val_labels)
 val_predict_baseline = baseline.predict(token_val)
 val_predict = genre_classifier.predict(token_val)
 
-baseline.eval(val_predict_baseline, val_labels)
-genre_classifier.eval(val_predict, val_labels)
+print(baseline.eval(val_predict_baseline, val_labels))
+print(genre_classifier.eval(val_predict, val_labels))
