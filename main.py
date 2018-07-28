@@ -19,8 +19,8 @@ TRAIN_LABELS = Path("tmp/train_labels.npy")
 VAL_LABELS = Path("tmp/val_labels.npy")
 IDX_TO_TOKEN = Path("tmp/idx_to_token.pkl")
 
-USE_CACHE = False
-MAX_SAMPLES = -1
+USE_CACHE = True
+MAX_SAMPLES = 5000
 
 # Load texts and labels:
 if not TRAIN_MOVIE_GENRES_PLOT_CSV.exists() or not USE_CACHE:
@@ -64,10 +64,10 @@ genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab, batch_siz
 
 baseline.train(token_train, train_labels)
 
-genre_classifier.train(token_train. train_labels, token_val, val_labels)
+# genre_classifier.train(token_train. train_labels, token_val, val_labels)
 
 val_predict_baseline = baseline.predict(token_val)
-val_predict = genre_classifier.predict(token_val)
+# val_predict = genre_classifier.predict(token_val)
 
 print(baseline.eval(val_predict_baseline, val_labels))
-print(genre_classifier.eval(val_predict, val_labels))
+# print(genre_classifier.eval(val_predict, val_labels))

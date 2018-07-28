@@ -10,7 +10,7 @@ VAL_MOVIE_GENRES_PLOT_CSV = Path("data/val_movie_genres_plot.csv")
 GENRES_TYPES_FILE = "data/genres.txt"
 
 CHUNKSIZE = 24000
-MAX_SAMPLES = 8000
+MAX_SAMPLES = 5000
 
 if MAX_SAMPLES > 0:
     train_data = pd.read_csv( TRAIN_MOVIE_GENRES_PLOT_CSV, header=None, chunksize=CHUNKSIZE, nrows=MAX_SAMPLES )

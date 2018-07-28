@@ -32,6 +32,6 @@ METRIC_NAME_TO_FUNC = {
     "recall": recall,
     "precision": precision,
     "f1": f1,
-    # "jaccard_index": jaccard_index,
+    "jaccard_index": jaccard_index,
 }
 
