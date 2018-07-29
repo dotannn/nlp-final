@@ -1,11 +1,14 @@
 import numpy as np
 from torch import sigmoid
 
+
 def recall(predicted, gt):
     return len(set(predicted) & set(gt)) / float(len(gt))
 
 
 def precision(predicted, gt):
+    if len(predicted) == 0:
+        return 0.
     return len(set(predicted) & set(gt)) / float(len(predicted))
 
 
