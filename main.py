@@ -14,13 +14,15 @@ VAL_MOVIE_GENRES_PLOT_CSV = Path("data/val_movie_genres_plot.csv")
 GENRES_TYPES_FILE = "data/genres.txt"
 
 TRAIN_TOKENS = Path("tmp/train_tokens.npy")
+TRAIN_TEXTS = Path("tmp/train_texts.npy")
 VAL_TOKENS = Path("tmp/val_tokens.npy")
+VAL_TEXTS = Path("tmp/val_texts.npy")
 TRAIN_LABELS = Path("tmp/train_labels.npy")
 VAL_LABELS = Path("tmp/val_labels.npy")
 IDX_TO_TOKEN = Path("tmp/idx_to_token.pkl")
 
 USE_CACHE = True
-MAX_SAMPLES = 5000
+MAX_SAMPLES = 1000
 
 # Load texts and labels:
 if not TRAIN_MOVIE_GENRES_PLOT_CSV.exists() or not USE_CACHE:
@@ -37,19 +39,23 @@ else:
 
 if TRAIN_TOKENS.exists() and VAL_TOKENS.exists() and IDX_TO_TOKEN.exists() and USE_CACHE:
     token_train = np.load( TRAIN_TOKENS )
+    texts_train = np.load( TRAIN_TEXTS)
     token_val = np.load( VAL_TOKENS )
+    texts_val = np.load( VAL_TEXTS )
     train_labels = np.load( TRAIN_LABELS )
     val_labels = np.load( VAL_LABELS )
     idx_to_token = pickle.load( Path( IDX_TO_TOKEN ).open( 'rb' ) )
     vocab = Vocabulary( idx_to_token )
 
 else:
-    token_train, train_labels = get_all_tokenized( train_data, 1 )
-    token_val, val_labels = get_all_tokenized( val_data, 1)
+    texts_train, token_train, train_labels = get_all_tokenized( train_data, 1 )
+    texts_val, token_val, val_labels = get_all_tokenized( val_data, 1)
     vocab = Vocabulary.from_text( token_train )
 
 np.save(str(TRAIN_TOKENS), token_train)
+np.save(str(TRAIN_TEXTS), texts_train)
 np.save(str(VAL_TOKENS), token_val)
+np.save(str(VAL_TEXTS), texts_val)
 np.save(str(TRAIN_LABELS), train_labels)
 np.save(str(VAL_LABELS), val_labels)
 pickle.dump(vocab._idx_to_token, open(IDX_TO_TOKEN, 'wb'))
@@ -60,14 +66,14 @@ n_genres = len(GENRES)
 
 baseline = NaiveBayesGenreClassifier()
 
-genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab, batch_size=128)
+genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab, batch_size=8)
 
-baseline.train(token_train, train_labels)
+baseline.train(texts_train, train_labels)
 
-# genre_classifier.train(token_train. train_labels, token_val, val_labels)
+genre_classifier.train(train_data=token_train, train_labels=train_labels, val_data=token_val, val_labels=val_labels)
 
-val_predict_baseline = baseline.predict(token_val)
-# val_predict = genre_classifier.predict(token_val)
+val_predict_baseline = baseline.predict(texts_val)
+val_predict = genre_classifier.predict(token_val)
 
 print(baseline.eval(val_predict_baseline, val_labels))
-# print(genre_classifier.eval(val_predict, val_labels))
+print(genre_classifier.eval(val_predict, val_labels))

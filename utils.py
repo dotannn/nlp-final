@@ -17,7 +17,7 @@ def fixup(x):
     return re1.sub(' ', html.unescape(x))
 
 
-def get_texts_and_tokenize(df, n_lbls=1, do_tokenize=True):
+def get_texts_and_tokenize(df, n_lbls=1):
     labels = df.iloc[:,range(n_lbls)].values
     labels = labels.tolist()
     labels = list(map(lambda x: ast.literal_eval(x[0]), labels))
@@ -28,18 +28,17 @@ def get_texts_and_tokenize(df, n_lbls=1, do_tokenize=True):
     labels = list(labels)
 
     # tokenize texts
-    if do_tokenize:
-        tok = Tokenizer().proc_all_mp(partition_by_cores(texts))
-        return tok, labels
-    return texts, labels
+    tok = Tokenizer().proc_all_mp(partition_by_cores(texts))
+    return texts, tok, labels
 
 
-def get_all_tokenized(df, n_lbls, do_tokenize=True):
-    tok, labels = [], []
+def get_all_tokenized(df, n_lbls):
+    texts, tok, labels = [], [], []
     for i, r in enumerate(df):
         print(i)
-        tok_, labels_ = get_texts_and_tokenize(r, n_lbls, do_tokenize=do_tokenize)
-        tok += tok_;
+        text_, tok_, labels_ = get_texts_and_tokenize(r, n_lbls)
+        texts += text_
+        tok += tok_
         labels += labels_
-    return tok, labels
+    return texts, tok, labels
 
