@@ -12,7 +12,7 @@ class RNNGenreClassifier(GenreClassifier):
     OPT_FN = partial( optim.Adam,
                       betas=(0.75, 0.99) )  # defaults for Adam dont work well for NLP so we change to this number...
 
-    def __init__(self, embedding_size=280, n_hidden_activations=720, n_layers=3, drop_mul_lm=0.8, drop_mul_classifier=0.6,
+    def __init__(self, embedding_size=250, n_hidden_activations=640, n_layers=3, drop_mul_lm=0.8, drop_mul_classifier=0.6,
                  bptt=70, wd=1e-7, n_classes=31, vocab=None, batch_size=128):#0.7):
         super( RNNGenreClassifier, self ).__init__(n_classes)
 

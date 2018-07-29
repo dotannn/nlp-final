@@ -22,7 +22,7 @@ VAL_LABELS = Path("tmp/val_labels.npy")
 IDX_TO_TOKEN = Path("tmp/idx_to_token.pkl")
 
 USE_CACHE = True
-MAX_SAMPLES = 1000
+MAX_SAMPLES = -1
 
 # Load texts and labels:
 if not TRAIN_MOVIE_GENRES_PLOT_CSV.exists() or not USE_CACHE:
@@ -66,14 +66,14 @@ n_genres = len(GENRES)
 
 baseline = NaiveBayesGenreClassifier()
 
-genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab, batch_size=8)
+genre_classifier = RNNGenreClassifier(n_classes=n_genres, vocab=vocab, batch_size=128)
 
 baseline.train(texts_train, train_labels)
 
-genre_classifier.train(train_data=token_train, train_labels=train_labels, val_data=token_val, val_labels=val_labels)
+# genre_classifier.train(train_data=token_train, train_labels=train_labels, val_data=token_val, val_labels=val_labels)
 
 val_predict_baseline = baseline.predict(texts_val)
-val_predict = genre_classifier.predict(token_val)
+# val_predict = genre_classifier.predict(token_val)
 
 print(baseline.eval(val_predict_baseline, val_labels))
-print(genre_classifier.eval(val_predict, val_labels))
+# print(genre_classifier.eval(val_predict, val_labels))
