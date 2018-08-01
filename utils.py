@@ -1,6 +1,7 @@
 import ast
 import re
 import html
+import math
 from fastai.text import Tokenizer, partition_by_cores
 
 from vocabulary import Vocabulary
@@ -41,4 +42,8 @@ def get_all_tokenized(df, n_lbls):
         tok += tok_
         labels += labels_
     return texts, tok, labels
+
+
+def np_sigmoid(x):
+    return 1. / (1. + math.exp( -x ))
 

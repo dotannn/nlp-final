@@ -9,6 +9,7 @@ from genre_classifier import GenreClassifier
 
 
 class RNNGenreClassifier(GenreClassifier):
+    THRESH = 0.5
     OPT_FN = partial( optim.Adam,
                       betas=(0.75, 0.99) )  # defaults for Adam dont work well for NLP so we change to this number...
 
@@ -77,10 +78,10 @@ class RNNGenreClassifier(GenreClassifier):
         train_ds = TextDataset( train_ids, reduced_train_labels)
         val_ds = TextDataset( val_ids, reduced_val_labels )
 
-        train_sampler = SortishSampler( train_ids, key=lambda x: len( train_ids[x] ), bs=batch_size) # TODO understand why bs// 2
+        train_sampler = SortishSampler( train_ids, key=lambda x: len( train_ids[x] ), bs=batch_size)
         val_sampler = SortSampler( val_ids, key=lambda x: len( val_ids[x] ) )
 
-        train_dl = DataLoader( train_ds, batch_size, num_workers=1, transpose=True, pad_idx=1, sampler=train_sampler ) # TODO understand why bs// 2
+        train_dl = DataLoader( train_ds, batch_size, num_workers=1, transpose=True, pad_idx=1, sampler=train_sampler )
         val_dl = DataLoader( val_ds, batch_size, num_workers=1, transpose=True, pad_idx=1, sampler=val_sampler )
 
         md = ModelData( "tmp", train_dl, val_dl )
@@ -141,4 +142,14 @@ class RNNGenreClassifier(GenreClassifier):
 
     def predict(self, summaries_tokens):
         summaries_ids = self._vocab.numericalize(summaries_tokens)
-        return self._classifier_model.predict_array(summaries_ids)
+        pp = []
+
+        for x in summaries_ids:
+            x = np.array(x)
+            x = np.expand_dims(x, 1)
+            res = self._classifier_model.predict_array(x)[0]
+            p = np.apply_along_axis(np_sigmoid, 0, res)
+            p = np.where( p > self.THRESH )[0].tolist()
+            pp.append(p)
+        return pp
+
