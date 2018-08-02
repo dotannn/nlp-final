@@ -34,6 +34,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    print( "Args:", args)
+
+
     USE_CACHE = not args.no_cache
     MAX_SAMPLES = args.max_samples
     BATCH_SIZE = args.batch_size
@@ -64,13 +67,13 @@ if __name__ == '__main__':
         texts_train, token_train, train_labels = get_all_tokenized( train_data, 1 )
         texts_val, token_val, val_labels = get_all_tokenized( val_data, 1 )
         vocab = Vocabulary.from_text( token_train )
-
-    np.save( str( TRAIN_TOKENS ), token_train )
-    np.save( str( TRAIN_TEXTS ), texts_train )
-    np.save( str( VAL_TOKENS ), token_val )
-    np.save( str( VAL_TEXTS ), texts_val )
-    np.save( str( TRAIN_LABELS ), train_labels )
-    np.save( str( VAL_LABELS ), val_labels )
+    #
+    # np.save( str( TRAIN_TOKENS ), token_train )
+    # np.save( str( TRAIN_TEXTS ), texts_train )
+    # np.save( str( VAL_TOKENS ), token_val )
+    # np.save( str( VAL_TEXTS ), texts_val )
+    # np.save( str( TRAIN_LABELS ), train_labels )
+    # np.save( str( VAL_LABELS ), val_labels )
     pickle.dump( vocab._idx_to_token, open( IDX_TO_TOKEN, 'wb' ) )
 
     GENRES = Path( GENRES_TYPES_FILE ).open( "r" ).readlines()
