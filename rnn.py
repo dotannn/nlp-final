@@ -1,5 +1,5 @@
 from fastai.text import LanguageModelLoader, LanguageModelData, accuracy, TextDataset, SortSampler, SortishSampler, \
-    ModelData, TextModel, RNN_Learner, to_gpu, DataLoader, get_rnn_classifier
+    ModelData, TextModel, RNN_Learner, to_gpu, DataLoader, get_rnn_classifier, LoggingCallback
 from fastai.lm_rnn import *
 from torch.nn.functional import binary_cross_entropy, sigmoid
 
@@ -56,11 +56,11 @@ class RNNGenreClassifier(GenreClassifier):
 
         lr = 1e-3
         self._language_model.lr_find(start_lr=lr/10, end_lr=lr*50, linear=True)
-        self._language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1)
+        self._language_model.fit(lr / 2, 1, wds=self._wd, use_clr=(32,2), cycle_len=1, callbacks=[LoggingCallback(save_path="./tmp/log")])
 
         self._language_model.lr_find( start_lr=lr / 10, end_lr=lr * 10, linear=True )
 
-        self._language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=15 )
+        self._language_model.fit( lr, 1, wds=self._wd, use_clr=(32, 2), cycle_len=20, callbacks=[LoggingCallback(save_path="./tmp/log")] )
 
         self._language_model.save_encoder("enc_weights")
 
@@ -120,11 +120,11 @@ class RNNGenreClassifier(GenreClassifier):
         self._classifier_model.load_encoder( 'enc_weights' )
 
         self._classifier_model.freeze_to( -1 )
-        self._classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3) )
+        self._classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3), callbacks=[LoggingCallback(save_path="./tmp/log")] )
         self._classifier_model.freeze_to( -2 )
-        self._classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3) )
+        self._classifier_model.fit( lrs, 1, cycle_len=1, use_clr=(8, 3), callbacks=[LoggingCallback(save_path="./tmp/log")] )
         self._classifier_model.unfreeze()
-        self._classifier_model.fit( lrs, 1, cycle_len=24, use_clr=(32, 10) )
+        self._classifier_model.fit( lrs, 1, cycle_len=24, use_clr=(32, 10),callbacks=[LoggingCallback(save_path="./tmp/log")] )
 
         self._classifier_model.save( 'classifier_weights' )
 

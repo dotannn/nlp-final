@@ -77,16 +77,19 @@ if __name__ == '__main__':
     GENRES = list( map( lambda x: x.strip(), GENRES ) )
     n_genres = len( GENRES )
 
+    print("Train Ours embedding_size=250, n_hidden_activations=640")
     genre_classifier = RNNGenreClassifier( n_classes=n_genres, vocab=vocab, batch_size=BATCH_SIZE )
 
     genre_classifier.train( train_data=token_train, train_labels=train_labels, val_data=token_val,
                             val_labels=val_labels )
 
     val_predict = genre_classifier.predict( token_val )
-    res = genre_classifier.eval( val_predict, val_labels )
+    res0 = genre_classifier.eval( val_predict, val_labels )
 
+    print( "Finished" )
     del genre_classifier
 
+    print( "Train Ours embedding_size=250, n_hidden_activations=640, no dropouts" )
     genre_classifier_no_dropouts = RNNGenreClassifier( n_classes=n_genres, vocab=vocab, batch_size=BATCH_SIZE,
                                                        drop_mul_lm=0., drop_mul_classifier=0. )
 
@@ -95,6 +98,66 @@ if __name__ == '__main__':
 
     val_predict = genre_classifier_no_dropouts.predict( token_val )
     res_no_drop = genre_classifier_no_dropouts.eval( val_predict, val_labels )
+
+    del res_no_drop
+
+    print("Finished")
+    print( "Train Ours embedding_size=400, n_hidden_activations=1150" )
+
+    genre_classifier = RNNGenreClassifier( n_classes=n_genres, vocab=vocab, batch_size=BATCH_SIZE, n_hidden_activations=1150, embedding_size=400 )
+
+    genre_classifier.train( train_data=token_train, train_labels=train_labels, val_data=token_val,
+                            val_labels=val_labels )
+
+    val_predict = genre_classifier.predict( token_val )
+    res1 = genre_classifier.eval( val_predict, val_labels )
+
+    del genre_classifier
+
+    print( "Finished" )
+    print( "Train Ours embedding_size=350, n_hidden_activations=720" )
+
+    genre_classifier = RNNGenreClassifier( n_classes=n_genres, vocab=vocab, batch_size=BATCH_SIZE,
+                                           n_hidden_activations=720, embedding_size=350)
+
+    genre_classifier.train( train_data=token_train, train_labels=train_labels, val_data=token_val,
+                            val_labels=val_labels )
+
+    val_predict = genre_classifier.predict( token_val )
+    res2 = genre_classifier.eval( val_predict, val_labels )
+
+    del genre_classifier
+
+    print( "Finished" )
+    print( "Train Ours embedding_size=350, n_hidden_activations=640" )
+
+    genre_classifier = RNNGenreClassifier( n_classes=n_genres, vocab=vocab, batch_size=BATCH_SIZE,
+                                           embedding_size=350)
+
+    genre_classifier.train( train_data=token_train, train_labels=train_labels, val_data=token_val,
+                            val_labels=val_labels )
+
+    val_predict = genre_classifier.predict( token_val )
+    res3 = genre_classifier.eval( val_predict, val_labels )
+
+    del genre_classifier
+
+    print( "Finished" )
+    print( "Train Ours embedding_size=250, n_hidden_activations=720" )
+
+    genre_classifier = RNNGenreClassifier( n_classes=n_genres, vocab=vocab, batch_size=BATCH_SIZE,
+                                           n_hidden_activations=720)
+
+    genre_classifier.train( train_data=token_train, train_labels=train_labels, val_data=token_val,
+                            val_labels=val_labels )
+
+
+    val_predict = genre_classifier.predict( token_val )
+    res4 = genre_classifier.eval( val_predict, val_labels )
+
+    del genre_classifier
+    print( "Finished" )
+    print( "Train baseline" )
 
     baseline = NaiveBayesGenreClassifier()
     baseline.train( texts_train, train_labels )
@@ -107,7 +170,11 @@ if __name__ == '__main__':
 
     print( tabulate( [['Naive-bayes(baseline)', res_baseline['precision'], res_baseline['recall'], res_baseline['f1'],
                        res_baseline['jaccard_index']],
-                      ['Ours', res['precision'], res['recall'], res['f1'], res['jaccard_index']],
+                      ['Ours[250,640]', res0['precision'], res0['recall'], res0['f1'], res0['jaccard_index']],
+                      ['Ours[400, 1150]', res1['precision'], res1['recall'], res1['f1'], res1['jaccard_index']],
+                      ['Ours[350, 720]', res2['precision'], res2['recall'], res2['f1'], res2['jaccard_index']],
+                      ['Ours[350, 640]', res3['precision'], res3['recall'], res3['f1'], res3['jaccard_index']],
+                      ['Ours[250, 720]', res4['precision'], res4['recall'], res4['f1'], res4['jaccard_index']],
                       ['Ours w/o dropouts', res_no_drop['precision'], res_no_drop['recall'], res_no_drop['f1'],
                        res_no_drop['jaccard_index']]],
                      headers=['Name', 'Precision', 'Recall', 'F-score', 'Jaccard'] ) )
