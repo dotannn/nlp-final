@@ -1,4 +1,3 @@
-from collections import defaultdict
 from utils import *
 from prepare_data import generate_input_csv
 from pathlib import Path
@@ -7,13 +6,16 @@ import pickle
 import pandas as pd
 from argparse import ArgumentParser
 
+from vocabulary import Vocabulary
 from rnn import RNNGenreClassifier
 from naivebayes import NaiveBayesGenreClassifier
 
+# input data:
 TRAIN_MOVIE_GENRES_PLOT_CSV = Path("data/trn_movie_genres_plot.csv")
 VAL_MOVIE_GENRES_PLOT_CSV = Path("data/val_movie_genres_plot.csv")
 GENRES_TYPES_FILE = "data/genres.txt"
 
+# cache paths:
 TRAIN_TOKENS = Path("tmp/train_tokens.npy")
 TRAIN_TEXTS = Path("tmp/train_texts.npy")
 VAL_TOKENS = Path("tmp/val_tokens.npy")
@@ -22,6 +24,7 @@ TRAIN_LABELS = Path("tmp/train_labels.npy")
 VAL_LABELS = Path("tmp/val_labels.npy")
 IDX_TO_TOKEN = Path("tmp/idx_to_token.pkl")
 
+# defaults:
 USE_CACHE = True
 MAX_SAMPLES = -1
 BATCH_SIZE = 8
@@ -67,7 +70,8 @@ if __name__ == '__main__':
         texts_train, token_train, train_labels = get_all_tokenized( train_data, 1 )
         texts_val, token_val, val_labels = get_all_tokenized( val_data, 1 )
         vocab = Vocabulary.from_text( token_train )
-    #
+
+    # Cache inputs:
     # np.save( str( TRAIN_TOKENS ), token_train )
     # np.save( str( TRAIN_TEXTS ), texts_train )
     # np.save( str( VAL_TOKENS ), token_val )
@@ -76,10 +80,12 @@ if __name__ == '__main__':
     # np.save( str( VAL_LABELS ), val_labels )
     pickle.dump( vocab._idx_to_token, open( IDX_TO_TOKEN, 'wb' ) )
 
+    # load genres:
     GENRES = Path( GENRES_TYPES_FILE ).open( "r" ).readlines()
     GENRES = list( map( lambda x: x.strip(), GENRES ) )
     n_genres = len( GENRES )
 
+    # evaluate all configurations:
     print("Train Ours embedding_size=250, n_hidden_activations=640")
     genre_classifier = RNNGenreClassifier( n_classes=n_genres, vocab=vocab, batch_size=BATCH_SIZE )
 

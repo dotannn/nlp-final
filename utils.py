@@ -4,7 +4,6 @@ import html
 import math
 from fastai.text import Tokenizer, partition_by_cores
 
-from vocabulary import Vocabulary
 
 BOS = 'xbos' # begining of string
 
