@@ -5,8 +5,13 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 import random
 
+
 class NaiveBayesGenreClassifier(GenreClassifier):
-    def __init__(self,):
+    """
+    Implementation of BoW->NaiveBayes classifier as a baseline.m
+    """
+    def __init__(self, n_classes=-1):
+        super(NaiveBayesGenreClassifier, self).__init__(n_classes=n_classes)
         self.text_clf = None
 
     def train(self, train_data, train_labels, val_data=None, val_labels=None):

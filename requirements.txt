@@ -1,4 +1,3 @@
-https://github.com/fastai/fastai
 pandas
 spacy
 tabulate
