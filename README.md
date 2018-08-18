@@ -12,20 +12,20 @@ python setup.py install
 ```
 
 ### Install other dependencies:
-```console
+```sh
 pip install pandas tabulate spacy nltk
 python -m spacy download en
 ```
 
 ### Get project’s code: 
-```console
+```bash
 
 git clone https://github.com/dotannn/nlp-final.git
 cd nlp-final
 ```
 
 ### Download the data:
-```console
+```sh
 mkdir data
 cd data
 wget ftp://ftp.fu-berlin.de/pub/misc/movies/database/frozendata/plot.list.gz
@@ -35,7 +35,7 @@ cd ..
 ```
 
 ### Run the code:
-```console
+```bash
 python main.py -bs 64 -nc
 ```
 The code will run training process of best hyper-parameters configurations of our model as well as the baseline model and return the results in a table:
