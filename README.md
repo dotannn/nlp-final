@@ -3,31 +3,41 @@
 ## how to run this code:
 
 ### Install fastai env:
+```console
 git clone https://github.com/fastai/fastai.git
 cd fastai
 conda env update
 source activate fastai
 python setup.py install
+```
 
 ### Install other dependencies:
+```console
 pip install pandas tabulate spacy nltk
 python -m spacy download en
+```
 
 ### Get project’s code: 
+```console
+
 git clone https://github.com/dotannn/nlp-final.git
 cd nlp-final
+```
 
 ### Download the data:
+```console
 mkdir data
 cd data
 wget ftp://ftp.fu-berlin.de/pub/misc/movies/database/frozendata/plot.list.gz
 wget ftp://ftp.fu-berlin.de/pub/misc/movies/database/frozendata/genres.list.gz
 gzip -d plot.list.gz
 cd ..
+```
 
 ### Run the code:
+```console
 python main.py -bs 64 -nc
-
+```
 The code will run training process of best hyper-parameters configurations of our model as well as the baseline model and return the results in a table:
 
 ### recommended env:
