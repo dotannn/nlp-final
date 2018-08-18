@@ -1,5 +1,5 @@
 from fastai.text import LanguageModelLoader, LanguageModelData, accuracy, TextDataset, SortSampler, SortishSampler, \
-    ModelData, TextModel, RNN_Learner, to_gpu, DataLoader, get_rnn_classifier, LoggingCallback
+    ModelData, TextModel, RNN_Learner, to_gpu, DataLoader, get_rnn_classifier, LoggingCallback, accuracy_multi
 from fastai.lm_rnn import *
 from torch.nn.functional import binary_cross_entropy, sigmoid
 
@@ -72,11 +72,11 @@ class RNNGenreClassifier(GenreClassifier):
             res[idxs] = 1.
             return res
 
-        reduced_train_labels = np.array( [one_hot_idxs(l, self._n_classes) for l in train_labels])
-        reduced_val_labels = np.array( [one_hot_idxs(l, self._n_classes) for l in val_labels] )
+        onehot_train_labels = np.array( [one_hot_idxs(l, self._n_classes) for l in train_labels])
+        onehot_val_labels = np.array( [one_hot_idxs(l, self._n_classes) for l in val_labels] )
 
-        train_ds = TextDataset( train_ids, reduced_train_labels)
-        val_ds = TextDataset( val_ids, reduced_val_labels )
+        train_ds = TextDataset( train_ids, onehot_train_labels)
+        val_ds = TextDataset( val_ids, onehot_val_labels )
 
         train_sampler = SortishSampler( train_ids, key=lambda x: len( train_ids[x] ), bs=batch_size)
         val_sampler = SortSampler( val_ids, key=lambda x: len( val_ids[x] ) )
