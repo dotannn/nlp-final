@@ -1,8 +1,36 @@
-# nlp-final
-TODO we'll do:
-1. naivebayes with BoW features
-2. some topic modeling with NLTK
-3. our super-cool RNN
-4. data handling
-5. metrics handling & reports
+# Predicting movie genres using plot summary
+
+## how to run this code:
+
+### Install fastai env:
+git clone https://github.com/fastai/fastai.git
+cd fastai
+conda env update
+source activate fastai
+python setup.py install
+
+### Install other dependencies:
+pip install pandas tabulate spacy nltk
+python -m spacy download en
+
+### Get project’s code: 
+git clone https://github.com/dotannn/nlp-final.git
+cd nlp-final
+
+### Download the data:
+mkdir data
+cd data
+wget ftp://ftp.fu-berlin.de/pub/misc/movies/database/frozendata/plot.list.gz
+wget ftp://ftp.fu-berlin.de/pub/misc/movies/database/frozendata/genres.list.gz
+gzip -d plot.list.gz
+cd ..
+
+### Run the code:
+python main.py -bs 64 -nc
+
+The code will run training process of best hyper-parameters configurations of our model as well as the baseline model and return the results in a table:
+
+### recommended env:
+We ran this project on AWS x3.x servers. the training process takes about x hours.
+
 
