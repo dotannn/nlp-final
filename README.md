@@ -43,4 +43,3 @@ The code will run training process of best hyper-parameters configurations of ou
 ### recommended env:
 We ran this project on AWS x3.x servers. the training process takes about x hours.
 
-
