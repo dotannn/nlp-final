@@ -48,5 +48,5 @@ Ours[250, 720]               0.723     0.642      0.638      0.557
 ```
 
 ## recommended env:
-We ran this project on AWS x3.x servers. the training process takes about x hours.
+We ran this project on AWS p3.8xlarge servers. with Deep Learning AMI (Amazon Linux) Version 11.0 (ami-ca4464b5) image. the training process takes about 6-7 hours.
 
