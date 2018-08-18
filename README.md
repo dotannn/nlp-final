@@ -40,6 +40,6 @@ python main.py -bs 64 -nc
 ```
 The code will run training process of best hyper-parameters configurations of our model as well as the baseline model and return the results in a table:
 
-### recommended env:
+## recommended env:
 We ran this project on AWS x3.x servers. the training process takes about x hours.
 
