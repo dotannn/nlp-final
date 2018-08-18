@@ -3,7 +3,7 @@
 ## how to run this code:
 
 ### Install fastai env:
-```console
+```bash
 git clone https://github.com/fastai/fastai.git
 cd fastai
 conda env update
